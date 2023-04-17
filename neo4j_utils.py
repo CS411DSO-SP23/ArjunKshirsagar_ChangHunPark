@@ -2,21 +2,23 @@ from neo4j import GraphDatabase
 
 db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "Hi!ch7young"))
 
-session = db.session(database="academicworld")
-
-def neo4j_get_university(input_value):
-    q = 'MATCH (a:INSTITUTE) WHERE a.name contains "{}" RETURN a'.format(input_value)
-    #q = 'MATCH (a:INSTITUTE) WHERE a.name contains "illinois" RETURN a'
-    response = list(session.run(q))
-    return response
-
 def neo4j_get_all_keywords():
+    session = db.session(database="academicworld")
     q = 'Match (k: KEYWORD) Return k.name as name'
     response = list(session.run(q))
+    session.close()
+    return response
+
+def neo4j_get_all_universties():
+    session = db.session(database="academicworld")
+    q = 'MATCH (u: INSTITUTE) RETURN u.name as name order by name'
+    response = list(session.run(q))
+    session.close()
     return response
 
 #widget1
 def neo4j_get_professor_university(input_keyword, n):
+    session = db.session(database="academicworld")
     q = 'MATCH (k: KEYWORD)<-[: LABEL_BY]-(p: PUBLICATION)<-[: PUBLISH]-(f: FACULTY)-[: AFFILIATION_WITH]->(u: INSTITUTE) ' + \
         'WHERE k.name = "{}" '.format(input_keyword) + \
         'MATCH (f)-[i: INTERESTED_IN]->(k) ' + \
@@ -25,6 +27,18 @@ def neo4j_get_professor_university(input_keyword, n):
         'RETURN fname, uname, n_pubs, score'
     records = session.run(q)
     result = [r.data() for r in records]
+    session.close()
     return result
 
-#session.close()
+#widget 4
+def neo4j_get_university_keywords(input_university, n):
+    session = db.session(database="academicworld")
+    q = 'Match (u: INSTITUTE)<-[:AFFILIATION_WITH]-(f: FACULTY)-[:PUBLISH]->(p: PUBLICATION)-[l: LABEL_BY]->(k: KEYWORD) ' + \
+        'where u.name = "{}" '.format(input_university) + \
+        'return k.name as name, round(sum(l.score)) as total_score ' + \
+        'order by total_score desc ' + \
+        'limit {}'.format(n)
+    records = session.run(q)
+    result = [r.data() for r in records]
+    session.close()
+    return result

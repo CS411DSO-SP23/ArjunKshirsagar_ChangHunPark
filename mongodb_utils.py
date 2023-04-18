@@ -1,6 +1,7 @@
 import pymongo
 
 conn = pymongo.MongoClient() #MongoClient('mongodb://localhost:27017')
+
 db = conn.academicworld
 
 def mongodb_get_all_keywords():
@@ -37,7 +38,19 @@ def mongodb_top10_publications(input_keyword):
     return result
 
 
+# unused
+# #widget5
+# def mongodb_update_favorites(input_name, action, collection):
+#     if collection == 'faculty':
+#         db.faculty.update_one({"name":input_name}, [{"$set":{"favorite":{"$eq":[action,"Add"]}}}])
+#         result = db.faculty.find({'favorite':true})
+#     else:
+#         db.faculty.updateMany({"affiliation.name":input_name}, [{"$set":{"affiliation.favorite":{"$eq":[action,"Add"]}}}])
+#         result = db.faculty.find({'favorite':true})
+#     return result
 
+# def mongodb_reset_favorites():
+#     query1 = db.faculty.update({}, {"$unset": {"favorite":1}} , {"multi": "true"})
 
 
 

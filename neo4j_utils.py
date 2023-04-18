@@ -1,10 +1,11 @@
 from neo4j import GraphDatabase
 
 db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "Hi!ch7young"))
+# db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "test_root"))
 
 def neo4j_get_all_keywords():
     session = db.session(database="academicworld")
-    q = 'Match (k: KEYWORD) Return k.name as name'
+    q = 'MATCH (k: KEYWORD) RETURN k.name as name'
     response = list(session.run(q))
     session.close()
     return response
@@ -12,6 +13,13 @@ def neo4j_get_all_keywords():
 def neo4j_get_all_universties():
     session = db.session(database="academicworld")
     q = 'MATCH (u: INSTITUTE) RETURN u.name as name order by name'
+    response = list(session.run(q))
+    session.close()
+    return response
+
+def neo4j_get_all_faculty():
+    session = db.session(database="academicworld")
+    q = 'MATCH (f: FACULTY) RETURN f.name as name order by name'
     response = list(session.run(q))
     session.close()
     return response
@@ -33,11 +41,11 @@ def neo4j_get_professor_university(input_keyword, n):
 #widget 4
 def neo4j_get_university_keywords(input_university, n):
     session = db.session(database="academicworld")
-    q = 'Match (u: INSTITUTE)<-[:AFFILIATION_WITH]-(f: FACULTY)-[:PUBLISH]->(p: PUBLICATION)-[l: LABEL_BY]->(k: KEYWORD) ' + \
-        'where u.name = "{}" '.format(input_university) + \
-        'return k.name as name, round(sum(l.score)) as total_score ' + \
-        'order by total_score desc ' + \
-        'limit {}'.format(n)
+    q = 'MATCH (u: INSTITUTE)<-[:AFFILIATION_WITH]-(f: FACULTY)-[:PUBLISH]->(p: PUBLICATION)-[l: LABEL_BY]->(k: KEYWORD) ' + \
+        'WHERE u.name = "{}" '.format(input_university) + \
+        'RETURN k.name as name, round(sum(l.score)) as total_score ' + \
+        'ORDER BY total_score desc ' + \
+        'LIMIT {}'.format(n)
     records = session.run(q)
     result = [r.data() for r in records]
     session.close()

@@ -3,7 +3,6 @@ import pymysql
 db = pymysql.connect(host='localhost',
                 user='root',
                 password='Hich7young',
-                # password='test_root'
                 database='academicworld',
                 charset='utf8mb4',
                 port=3306,
@@ -12,6 +11,13 @@ db = pymysql.connect(host='localhost',
 def mysql_get_all_keywords():
     with db.cursor() as cursor:
         sql = 'select name from keyword order by name'
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        return result
+
+def mysql_get_all_favorite_faculties():
+    with db.cursor() as cursor:
+        sql = 'select * from favorite_faculty order by name'
         cursor.execute(sql)
         result = cursor.fetchall()
         return result
@@ -29,59 +35,49 @@ def mysql_year_publication(keyword):
         result = cursor.fetchall()
         return result
 
-#widget5
-def mysql_create_favorite_faculty(input_faculty, action):
+
+#widget5 using transaction tecnology
+def mysql_add_favorite_faculty(input_faculty):
     with db.cursor() as cursor:
-        sql1 = 'DROP TABLE IF EXISTS favorite_faculty;'
-        sql2 = 'CREATE TABLE favorite_faculty AS SELECT faculty.name as fname, position, university.name as uname, email, phone' + \
-            'FROM faculty, university WHERE faculty.university_id = university.id AND faculty.name = {}'.format(input_faculty)
-        sql3 = 'SELECT * FROM favorite_faculty;'
+        sql1 = 'CREATE TABLE IF NOT EXISTS favorite_faculty (' + \
+                'Name varchar(512) not null, ' + \
+                'Position varchar(512), ' + \
+                'University varchar(512),' + \
+                'Email varchar(512),' + \
+                'Phone varchar(512),' + \
+                'primary key(Name))'
         cursor.execute(sql1)
+        sql2 = 'select f.name, position, u.name as univ, email, phone ' + \
+                'from faculty f join university u on f.university_id = u.id ' + \
+                'where trim(f.name) = trim("{}")'.format(input_faculty)
         cursor.execute(sql2)
+        result = cursor.fetchall()
+        #print(sql2)
+        #print(result)
+        position = result[0]["position"]
+        university = result[0]["univ"]
+        email = result[0]["email"]
+        phone = result[0]["phone"]
+        sql3 = 'INSERT IGNORE INTO favorite_faculty ' + \
+                'Values ("{}", "{}", "{}", "{}", "{}")'.format(input_faculty, position, university, email, phone)
         cursor.execute(sql3)
+        sql4 = 'SELECT * FROM favorite_faculty order by Name'
+        cursor.execute(sql4)
         result = cursor.fetchall()
+        cursor.execute('commit')
         return result
 
-def mysql_update_favorite_faculty(input_faculty, action):
+#widget 6
+def mysql_delete_favorite_faculty(input_faculty):
     with db.cursor() as cursor:
-        if action=='Add':
-            sql1 = 'INSERT INTO favorite_faculty(fname, position, uname, email, phone)' + \
-                'SELECT faculty.name as fname, position, university.name as uname, email, phone' + \
-                'FROM faculty, university WHERE faculty.university_id = university.id AND faculty.name = {}'.format(input_faculty)
-        elif action=='Remove':
-            sql1 = 'DELETE FROM favorite_faculty WHERE name = {}'.format(input_faculty)
+        sql1 = 'DELETE FROM favorite_faculty ' + \
+                'WHERE trim(Name) = trim("{}")'.format(input_faculty)
         cursor.execute(sql1)
-        sql2 = 'SELECT * FROM favorite_faculty;'
+        sql2 = 'SELECT * FROM favorite_faculty order by Name'
         cursor.execute(sql2)
         result = cursor.fetchall()
+        cursor.execute('commit')
         return result
-
-#widget6
-def mysql_create_favorite_universities(input_university, action):
-    with db.cursor() as cursor:
-        sql1 = 'DROP TABLE IF EXISTS favorite_university;'
-        sql2 = 'CREATE TABLE favorite_university AS SELECT name FROM university WHERE faculty.name = {}'.format(input_university)
-        sql3 = 'SELECT * FROM favorite_university;'
-        cursor.execute(sql1)
-        cursor.execute(sql2)
-        cursor.execute(sql3)
-        result = cursor.fetchall()
-        return result
-
-def mysql_update_favorite_universities(input_university, action):
-    with db.cursor() as cursor:
-        if action=='Add':
-            sql1 = 'INSERT INTO favorite_university(name)' + \
-                'SELECT name' + \
-                'FROM university WHERE name = {}'.format(input_university)
-        elif action=='Remove':
-            sql1 = 'DELETE FROM favorite_university WHERE name = {}'.format(input_university)
-        cursor.execute(sql1)
-        sql2 = 'SELECT * FROM favorite_university;'
-        cursor.execute(sql2)
-        result = cursor.fetchall()
-        return result
-
 
 #unused
 def mysql_get_professor_university(input_keyword, n):
@@ -95,3 +91,4 @@ def mysql_get_professor_university(input_keyword, n):
         cursor.execute(sql)
         result = cursor.fetchall()
         return result
+    

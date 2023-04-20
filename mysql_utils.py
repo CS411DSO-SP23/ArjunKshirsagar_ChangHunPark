@@ -8,6 +8,19 @@ db = pymysql.connect(host='localhost',
                 port=3306,
                 cursorclass=pymysql.cursors.DictCursor)
 
+#create indexes on "keyword name", "faculty name", and "publication title" to speed up the performance of select statement.
+"""
+def create_index():
+     with db.cursor() as cursor:
+        sql = 'CREATE INDEX idx_keyword_name ON keyword(name)'
+        cursor.execute(sql)
+        sql = 'CREATE INDEX idx_faculty_name ON faculty(name)'
+        cursor.execute(sql)
+        sql = 'CREATE INDEX idx_publication_title ON publication(title)'
+        cursor.execute(sql)
+        cursor.execute('commit')
+"""
+
 def mysql_get_all_keywords():
     with db.cursor() as cursor:
         sql = 'select name from keyword order by name'
@@ -37,21 +50,21 @@ def mysql_get_all_favorite_publication():
                 result = cursor.fetchall()
         return result
     
-#widget2
+#widget2 using prepared statement
 def mysql_year_publication(keyword):
         with db.cursor() as cursor:
                 sql = 'select p.year as year, count(p.id) as n_pubs ' + \
                 'from keyword k join publication_keyword pk on k.id = pk.keyword_id ' + \
                 'join publication p on pk.publication_id = p.id ' + \
-                'where k.name = "{}" '.format(keyword) + \
+                'where k.name = %s ' + \
                 'group by p.year ' + \
                 'order by year'
-                cursor.execute(sql)
+                cursor.execute(sql,(keyword))
                 result = cursor.fetchall()
                 return result
 
 
-#widget5 using transaction tecnology
+#widget5 using transaction technology & prepared statement
 def mysql_add_favorite_faculty(input_faculty):
     with db.cursor() as cursor:
         sql1 = 'CREATE TABLE IF NOT EXISTS favorite_faculty (' + \
@@ -64,8 +77,8 @@ def mysql_add_favorite_faculty(input_faculty):
         cursor.execute(sql1)
         sql2 = 'select f.name, position, u.name as univ, email, phone ' + \
                 'from faculty f join university u on f.university_id = u.id ' + \
-                'where trim(f.name) = trim("{}")'.format(input_faculty)
-        cursor.execute(sql2)
+                'where trim(f.name) = trim(%s)'
+        cursor.execute(sql2,(input_faculty))
         result = cursor.fetchall()
         if len(result) > 0:
                 position = result[0]["position"]
@@ -73,8 +86,8 @@ def mysql_add_favorite_faculty(input_faculty):
                 email = result[0]["email"]
                 phone = result[0]["phone"]
                 sql3 = 'INSERT IGNORE INTO favorite_faculty ' + \
-                        'Values ("{}", "{}", "{}", "{}", "{}")'.format(input_faculty, position, university, email, phone)
-                cursor.execute(sql3)
+                        'Values (%s, %s, %s, %s, %s)'
+                cursor.execute(sql3, (input_faculty, position, university, email, phone))
         sql4 = 'SELECT * FROM favorite_faculty order by Name'
         cursor.execute(sql4)
         result = cursor.fetchall()
@@ -85,15 +98,15 @@ def mysql_add_favorite_faculty(input_faculty):
 def mysql_delete_favorite_faculty(input_faculty):
     with db.cursor() as cursor:
         sql1 = 'DELETE FROM favorite_faculty ' + \
-                'WHERE trim(Name) = trim("{}")'.format(input_faculty)
-        cursor.execute(sql1)
+                'WHERE trim(Name) = trim(%s)'
+        cursor.execute(sql1,(input_faculty))
         sql2 = 'SELECT * FROM favorite_faculty order by Name'
         cursor.execute(sql2)
         result = cursor.fetchall()
         cursor.execute('commit')
         return result
 
-#widget 6
+#widget 6 using transaction technology & prepared statement
 def mysql_add_favorite_publication(input_publication):
     with db.cursor() as cursor:
         sql1 = 'CREATE TABLE IF NOT EXISTS favorite_publication (' + \
@@ -106,11 +119,9 @@ def mysql_add_favorite_publication(input_publication):
         sql2 = 'select title, f.name as name, venue, year ' + \
                 'from publication p join faculty_publication fp on p.id = fp.publication_id ' + \
                 'join faculty f on fp.faculty_id = f.id ' + \
-                'where trim(title) = trim("{}")'.format(input_publication)
-        cursor.execute(sql2)
+                'where trim(title) = trim(%s)'
+        cursor.execute(sql2,(input_publication))
         result = cursor.fetchall()
-        #print(sql2)
-        #print(result)
         if len(result) > 0:
                 title = result[0]["title"]
                 year = result[0]["year"]
@@ -119,8 +130,8 @@ def mysql_add_favorite_publication(input_publication):
                 for r in result:
                         name += r["name"] + ", "
                 sql3 = 'INSERT IGNORE INTO favorite_publication ' + \
-                        'Values ("{}", "{}", "{}", "{}")'.format(title, name, year, venue)
-                cursor.execute(sql3)
+                        'Values (%s, %s, %s, %s)'
+                cursor.execute(sql3,(title, name, year, venue))
         sql4 = 'SELECT * FROM favorite_publication order by title'
         cursor.execute(sql4)
         result = cursor.fetchall()
@@ -131,23 +142,10 @@ def mysql_add_favorite_publication(input_publication):
 def mysql_delete_favorite_publication(input_publication):
     with db.cursor() as cursor:
         sql1 = 'DELETE FROM favorite_publication ' + \
-                'WHERE trim(Title) = trim("{}")'.format(input_publication)
-        cursor.execute(sql1)
+                'WHERE trim(Title) = trim(%s)'
+        cursor.execute(sql1,(input_publication))
         sql2 = 'SELECT * FROM favorite_publication order by Title'
         cursor.execute(sql2)
         result = cursor.fetchall()
         cursor.execute('commit')
-        return result
-
-#unused
-def mysql_get_professor_university(input_keyword, n):
-    with db.cursor() as cursor:
-        sql = 'select f.name, u.name, n_pubs, fk.score\
-               from keyword k, faculty_keyword fk, faculty f, university u, publication_keyword pk, keyword_faculty_publication_summary kfps\
-               where k.name = "{}" and \
-                     k.id = fk.keyword_id and fk.faculty_id = f.id and f.university_id = u.id and k.id = kfps.keyword_id and f.id = kfps.faculty_id\
-               order by n_pubs desc, fk.score desc\
-               limit {}'.format(input_keyword, n)
-        cursor.execute(sql)
-        result = cursor.fetchall()
         return result

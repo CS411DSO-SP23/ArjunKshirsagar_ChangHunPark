@@ -17,23 +17,38 @@ def mysql_get_all_keywords():
 
 def mysql_get_all_favorite_faculties():
     with db.cursor() as cursor:
-        sql = 'select * from favorite_faculty order by name'
+        sql = 'show tables like "favorite_faculty"'
         cursor.execute(sql)
         result = cursor.fetchall()
+        if len(result) > 0:
+                sql = 'select * from favorite_faculty order by name'
+                cursor.execute(sql)
+                result = cursor.fetchall()
         return result
 
-#widget2
-def mysql_year_publication(keyword):
+def mysql_get_all_favorite_publication():
     with db.cursor() as cursor:
-        sql = 'select p.year as year, count(p.id) as n_pubs ' + \
-              'from keyword k join publication_keyword pk on k.id = pk.keyword_id ' + \
-            'join publication p on pk.publication_id = p.id ' + \
-            'where k.name = "{}" '.format(keyword) + \
-            'group by p.year ' + \
-            'order by year'
+        sql = 'show tables like "favorite_publication"'
         cursor.execute(sql)
         result = cursor.fetchall()
+        if len(result) > 0:
+                sql = 'select * from favorite_publication order by title'
+                cursor.execute(sql)
+                result = cursor.fetchall()
         return result
+    
+#widget2
+def mysql_year_publication(keyword):
+        with db.cursor() as cursor:
+                sql = 'select p.year as year, count(p.id) as n_pubs ' + \
+                'from keyword k join publication_keyword pk on k.id = pk.keyword_id ' + \
+                'join publication p on pk.publication_id = p.id ' + \
+                'where k.name = "{}" '.format(keyword) + \
+                'group by p.year ' + \
+                'order by year'
+                cursor.execute(sql)
+                result = cursor.fetchall()
+                return result
 
 
 #widget5 using transaction tecnology
@@ -52,28 +67,73 @@ def mysql_add_favorite_faculty(input_faculty):
                 'where trim(f.name) = trim("{}")'.format(input_faculty)
         cursor.execute(sql2)
         result = cursor.fetchall()
-        #print(sql2)
-        #print(result)
-        position = result[0]["position"]
-        university = result[0]["univ"]
-        email = result[0]["email"]
-        phone = result[0]["phone"]
-        sql3 = 'INSERT IGNORE INTO favorite_faculty ' + \
-                'Values ("{}", "{}", "{}", "{}", "{}")'.format(input_faculty, position, university, email, phone)
-        cursor.execute(sql3)
+        if len(result) > 0:
+                position = result[0]["position"]
+                university = result[0]["univ"]
+                email = result[0]["email"]
+                phone = result[0]["phone"]
+                sql3 = 'INSERT IGNORE INTO favorite_faculty ' + \
+                        'Values ("{}", "{}", "{}", "{}", "{}")'.format(input_faculty, position, university, email, phone)
+                cursor.execute(sql3)
         sql4 = 'SELECT * FROM favorite_faculty order by Name'
         cursor.execute(sql4)
         result = cursor.fetchall()
         cursor.execute('commit')
         return result
 
-#widget 6
+
 def mysql_delete_favorite_faculty(input_faculty):
     with db.cursor() as cursor:
         sql1 = 'DELETE FROM favorite_faculty ' + \
                 'WHERE trim(Name) = trim("{}")'.format(input_faculty)
         cursor.execute(sql1)
         sql2 = 'SELECT * FROM favorite_faculty order by Name'
+        cursor.execute(sql2)
+        result = cursor.fetchall()
+        cursor.execute('commit')
+        return result
+
+#widget 6
+def mysql_add_favorite_publication(input_publication):
+    with db.cursor() as cursor:
+        sql1 = 'CREATE TABLE IF NOT EXISTS favorite_publication (' + \
+                'Title varchar(512) not null, ' + \
+                'Author varchar(512), ' + \
+                'Year varchar(512),' + \
+                'Venue varchar(512),' + \
+                'primary key(Title))'
+        cursor.execute(sql1)
+        sql2 = 'select title, f.name as name, venue, year ' + \
+                'from publication p join faculty_publication fp on p.id = fp.publication_id ' + \
+                'join faculty f on fp.faculty_id = f.id ' + \
+                'where trim(title) = trim("{}")'.format(input_publication)
+        cursor.execute(sql2)
+        result = cursor.fetchall()
+        #print(sql2)
+        #print(result)
+        if len(result) > 0:
+                title = result[0]["title"]
+                year = result[0]["year"]
+                venue = result[0]["venue"]
+                name = "" 
+                for r in result:
+                        name += r["name"] + ", "
+                sql3 = 'INSERT IGNORE INTO favorite_publication ' + \
+                        'Values ("{}", "{}", "{}", "{}")'.format(title, name, year, venue)
+                cursor.execute(sql3)
+        sql4 = 'SELECT * FROM favorite_publication order by title'
+        cursor.execute(sql4)
+        result = cursor.fetchall()
+        cursor.execute('commit')
+        return result
+
+
+def mysql_delete_favorite_publication(input_publication):
+    with db.cursor() as cursor:
+        sql1 = 'DELETE FROM favorite_publication ' + \
+                'WHERE trim(Title) = trim("{}")'.format(input_publication)
+        cursor.execute(sql1)
+        sql2 = 'SELECT * FROM favorite_publication order by Title'
         cursor.execute(sql2)
         result = cursor.fetchall()
         cursor.execute('commit')
@@ -91,4 +151,3 @@ def mysql_get_professor_university(input_keyword, n):
         cursor.execute(sql)
         result = cursor.fetchall()
         return result
-    

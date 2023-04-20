@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
 
-from mysql_utils import mysql_get_all_keywords, mysql_year_publication, mysql_add_favorite_faculty, mysql_get_all_favorite_faculties, mysql_delete_favorite_faculty
+from mysql_utils import mysql_get_all_keywords, mysql_year_publication, mysql_add_favorite_faculty, mysql_get_all_favorite_faculties, mysql_delete_favorite_faculty, mysql_add_favorite_publication, mysql_delete_favorite_publication, mysql_get_all_favorite_publication
 from neo4j_utils import neo4j_get_all_universties, neo4j_get_professor_university, neo4j_get_university_keywords, neo4j_get_all_faculty
 from mongodb_utils import mongodb_top10_publications
 
@@ -13,6 +13,7 @@ neo4j_all_universities = neo4j_get_all_universties()
 neo4j_all_faculty = neo4j_get_all_faculty()
 all_keywords = mysql_get_all_keywords()
 all_favorite_faculties = mysql_get_all_favorite_faculties()
+all_favorite_publications = mysql_get_all_favorite_publication()
 
 app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -135,7 +136,38 @@ app.layout = html.Div([
             columns = [{'name': 'Name', 'id': 'Name'}, {'name': 'Position', 'id': 'Position'}, 
                     {'name': 'University', 'id': 'University'}, {'name': 'Email', 'id': 'Email'}, {'name': 'Phone', 'id': 'Phone'}],
             id='favorite_faculty_table',
-            data = all_favorite_faculties,
+            style_cell={'textAlign': 'left'}
+        )
+    ]),
+
+    #widget6 using mysql
+    html.Div([
+        html.H6(children="Add/Delete Favorite Publication"),
+        dbc.Row([
+            dbc.Col(
+                html.Label(children='Publication Name:', style={'textAlign':'right'}),width=2),
+            dbc.Col(
+                dcc.Input(id='input6', value='your favorite publication name', type='text')
+                ),
+            dbc.Col(
+                dcc.Dropdown(
+                    options=[
+                        {'label': 'Add', 'value': 'add'},
+                        {'label': 'Delete', 'value': 'delete'},
+                    ],
+                    value='add',
+                    id = 'action2'
+                ),
+            ),
+            dbc.Col(
+                html.Button(id='submit2', n_clicks=0, children='Submit'),
+            )
+        ]),
+        html.Br(),
+        dash_table.DataTable(
+            columns = [{'name': 'Title', 'id': 'Title'}, {'name': 'Author', 'id': 'Author'}, 
+                    {'name': 'Year', 'id': 'Year'}, {'name': 'Venue', 'id': 'Venue'}],
+            id='favorite_publication_table',
             style_cell={'textAlign': 'left'}
         )
     ]),
@@ -207,10 +239,26 @@ def update_graph2(input_university, n_result):
     Input('submit', 'n_clicks')
 )
 def add_favorite_faculty(input_faculty, action, n_clicks):
+    result = all_favorite_faculties
     if action == "add" and n_clicks > 0:
         result = mysql_add_favorite_faculty(input_faculty)
     elif action == "delete" and n_clicks > 0:
         result = mysql_delete_favorite_faculty(input_faculty)
+    return result
+
+#widget6
+@callback(
+    Output('favorite_publication_table', 'data'),
+    State('input6', 'value'),
+    State('action2', 'value'),
+    Input('submit2', 'n_clicks')
+)
+def add_favorite_publication(input_publication, action, n_clicks):
+    result = all_favorite_publications
+    if action == "add" and n_clicks > 0:
+        result = mysql_add_favorite_publication(input_publication)
+    elif action == "delete" and n_clicks > 0:
+        result = mysql_delete_favorite_publication(input_publication)
     return result
 
 if __name__ == '__main__':

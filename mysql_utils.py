@@ -2,7 +2,7 @@ import pymysql
 
 db = pymysql.connect(host='localhost',
                 user='root',
-                password='Hich7young',
+                password='test_root',
                 database='academicworld',
                 charset='utf8mb4',
                 port=3306,

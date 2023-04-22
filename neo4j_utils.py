@@ -1,6 +1,6 @@
 from neo4j import GraphDatabase
 
-db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "Hi!ch7young"))
+db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "test_root"))
 # db = GraphDatabase.driver("bolt://localhost:7687", auth = ("neo4j", "test_root"))
 
 def neo4j_get_all_keywords():

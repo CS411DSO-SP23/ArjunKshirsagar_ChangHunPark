@@ -12,11 +12,11 @@ def mongodb_get_all_keywords():
     return results
 
 #widget 3
-def mongodb_top10_publications(input_keyword):
+def mongodb_topn_publications(input_keyword, n):
     response = db.publications.aggregate([{"$unwind": "$keywords"}, 
                                          {"$match": {"keywords.name": input_keyword}}, 
                                          {"$sort": {"numCitations": -1}}, 
-                                         {"$limit": 10}, 
+                                         {"$limit": n}, 
                                          {"$project": {"_id": 0, "title": 1, "venue": 1, "year": 1, "numCitations": 1}}])
     result = []
     for r in response:
@@ -62,5 +62,3 @@ def mongodb_get_university(input_value):
                                     {"$project": {"_id": 0, "name":1}}])
 
     return results
-
-#mongodb_top10_publications("database systems")

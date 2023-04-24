@@ -23,7 +23,7 @@ app.layout = html.Div([
     dbc.Card(
         dbc.CardBody([
     
-            dbc.Card(dbc.Row(html.H1(children='Academic World: Explore Research Topics', style={'textAlign':'center'})), body=True),
+            dbc.Card(dbc.Row(html.H1(children='Academic World: Explore Professors and Publications with Keywords', style={'textAlign':'center'})), body=True),
             html.Br(),
 
             #widget1 using Neo4j

@@ -36,29 +36,3 @@ def mongodb_topn_publications(input_keyword, n):
             new_r["numCitations"] = r["numCitations"]   
         result.append(new_r)
     return result
-
-
-# unused
-# #widget5
-# def mongodb_update_favorites(input_name, action, collection):
-#     if collection == 'faculty':
-#         db.faculty.update_one({"name":input_name}, [{"$set":{"favorite":{"$eq":[action,"Add"]}}}])
-#         result = db.faculty.find({'favorite':true})
-#     else:
-#         db.faculty.updateMany({"affiliation.name":input_name}, [{"$set":{"affiliation.favorite":{"$eq":[action,"Add"]}}}])
-#         result = db.faculty.find({'favorite':true})
-#     return result
-
-# def mongodb_reset_favorites():
-#     query1 = db.faculty.update({}, {"$unset": {"favorite":1}} , {"multi": "true"})
-
-
-
-#unused
-def mongodb_get_university(input_value):
-    results = db.faculty.aggregate([{"$match": {"affiliation.name": { "$regex": input_value, "$options": 'i' }}}, 
-                                    {"$project": { "affiliation.name": 1,"_id": 0}},
-                                    {"$group": {"_id": "$affiliation.name", "name": {"$addToSet": "$affiliation.name"}}}, 
-                                    {"$project": {"_id": 0, "name":1}}])
-
-    return results

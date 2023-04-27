@@ -10,7 +10,7 @@ This application aims to serve graduate students who would like to explore vario
 
 
 ## Demo:
-[Video Demo](insert-link-here)
+[Video Demo Link](https://mediaspace.illinois.edu/media/t/1_on31glsa)
 
 
 ## Installation:
@@ -35,7 +35,7 @@ The applications uses Python packages which contain tools for accessing the data
 Prepared statements are used for each of the widgets and all 3 databases. For the respective database, a querying or updating statement is given with placeholders to be replaced by the user's input(s), and executed when the dashboard is in use.
 
 - **Transaction**: 
-Transactions are used for widget 5 and 6 in `mysql_utils.py`. For creating, updating, or deleting favorite faculty and publications, the series of statements are run as a block and are committed as a transaction.
+The transaction method is used for widget 5 and 6 in `mysql_utils.py`, for creating, updating, and deleting favorite faculty and publications. We create a table if it doesn’t exist in the database and add the data, updating the table. The queries are executed together as a block of work and committed as a transaction.
 
 - **Index**:
 Indexes are created in `mysql_utils.py` as “keyword name”, “faculty name”, and “publication title”, in the “keyword”, “faculty”, and “publication” tables, respectively. These indices speed up the performance of MySQL select statements (widgets 2, 5, 6). See below:
